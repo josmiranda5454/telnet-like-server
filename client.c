@@ -23,7 +23,7 @@ int main (int argc, char *argv[]) {
     char rep[256];
  
     // Let's create a socket
-    socket_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    socket_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (socket_fd < 1) {
         perror("Error opening our socket");
         exit(1);
@@ -34,7 +34,7 @@ int main (int argc, char *argv[]) {
     server_address.sin_port = htons(PORT_NUMBER);
     server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    // Let's bind it
+    // Let's connecty it
     if (connect(socket_fd, (struct sockaddr*) &server_address, sizeof(server_address)) != 0) {
         perror("Error in binding");
         close(socket_fd);
@@ -42,20 +42,20 @@ int main (int argc, char *argv[]) {
     }
 
     while (1) {
-        scanf("%s", buf);
-        if (send(socket_fd, buf, strlen(buf), 0) < 0) {
-            perror("Send failed");
-            close(socket_fd);
-            exit(1);
-        }
-
+        memset(rep, 0, sizeof(rep));
         if (recv(socket_fd, rep, 256, 0) < 0 ) {
             perror("Receive failed");
             close(socket_fd);
             exit(1);
         }
+        printf("%s", rep);
 
-        printf("Server reply: %s", rep);
+        scanf("%s", buf);
+        if (write(socket_fd, buf, strlen(buf)) < 0) {
+            perror("Send failed");
+            close(socket_fd);
+            exit(1);
+        }
     }
 
     close(socket_fd);

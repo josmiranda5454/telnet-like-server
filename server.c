@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define PORT_NUMBER 23
 
@@ -17,6 +18,8 @@ int main(int argc, char *argv[]) {
     int rc = 0;
     int client_address_len = 0;
     char reply[256];
+    char sendbuf[256] = "hello from server";
+    const char* username = "Username: ";
 
     // Check the arguments before proceeding
     if (argc < 2 || argc >= 3) {
@@ -33,7 +36,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Let's create a socket
-    socket_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    socket_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (socket_fd < 1) {
         perror("Error opening our socket");
         exit(1);
@@ -59,33 +62,35 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    client_address_len = sizeof(client_address);
     // Let's run forever
+    client_socket_fd = accept(socket_fd, (struct sockaddr *) &client_address, &client_address_len);
+    if (client_socket_fd < 0) {
+        perror("Error on accept");
+        close(socket_fd);
+        exit(1);
+    }
+    fflush(stdout);
+    send(client_socket_fd, username, strlen(username), 0); 
+    
     while(1) {
-        // Let's block until we get a client
-        client_address_len = sizeof(client_address);
-        client_socket_fd = accept(socket_fd, (struct sockaddr *) &client_address, &client_address_len);
-        if (client_socket_fd < 0) {
-            perror("Error on accept");
-            close(socket_fd);
-            exit(1);
-        }
-
+        memset(reply, 0, sizeof(reply));
         rc = read(client_socket_fd, reply, 256);
 
         if (rc < 0) {
-            close(socket_fd);
-            close(client_socket_fd);
-            printf("Disconnected");
-            exit(0);
+            break;
         }
 
-       rc = write(client_socket_fd, "hi from sever", 13);
+       rc = write(client_socket_fd, sendbuf, strlen(sendbuf));
+       printf("I sent %d\n", rc);
        if (rc < 0 ) {
            perror("Write to socket failed");
        }
-       close(client_socket_fd);
+       //close(client_socket_fd);
     }
     close(socket_fd);
+    close(client_socket_fd);
+    printf("Disconnected");
     return 0;
 }
 
