@@ -94,12 +94,13 @@ int main(int argc, char *argv[]) {
         }
 
         if (strcmp(reply, LOGOUT) == 0) {
-            send(client_socket_fd, "Session Terminated, you can leave", 33, 0);
+            send(client_socket_fd, "Session Terminated, you can leave\n", 34, 0);
             break;
         }
 
+        memset(sendbuf, 0, sizeof(sendbuf));
         snprintf(sendbuf, sizeof(sendbuf),  "%s\n", reply);
-        sendbuf[255] = '\0'; 
+        sendbuf[255] = '\0'; // No matter what just put end of line
         rc = send(client_socket_fd, sendbuf, strlen(sendbuf), 0);
         if (rc < 0 ) {
             perror("Write to socket failed");
