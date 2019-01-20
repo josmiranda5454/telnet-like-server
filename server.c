@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in client_address;
     int rc = 0;
     int client_address_len = 0;
+    char reply[256];
 
     // Check the arguments before proceeding
     if (argc < 2 || argc >= 3) {
@@ -59,7 +60,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Let's run forever
-    for(;;) {
+    while(1) {
         // Let's block until we get a client
         client_address_len = sizeof(client_address);
         client_socket_fd = accept(socket_fd, (struct sockaddr *) &client_address, &client_address_len);
@@ -68,7 +69,23 @@ int main(int argc, char *argv[]) {
             close(socket_fd);
             exit(1);
         }
+
+        rc = read(client_socket_fd, reply, 256);
+
+        if (rc < 0) {
+            close(socket_fd);
+            close(client_socket_fd);
+            printf("Disconnected");
+            exit(0);
+        }
+
+       rc = write(client_socket_fd, "hi from sever", 13);
+       if (rc < 0 ) {
+           perror("Write to socket failed");
+       }
+       close(client_socket_fd);
     }
+    close(socket_fd);
     return 0;
 }
 
