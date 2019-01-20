@@ -7,7 +7,13 @@
 #include <string.h>
 
 #define PORT_NUMBER 23
+#define MAX_ATTEMPTS 3
 
+#define USER "test"
+#define PASS "test1"
+#define LOGOUT "LOGOUT"
+
+int loginPrompt(int socket_fd);
 int main(int argc, char *argv[]) {
 
     int port = -1;
@@ -18,8 +24,8 @@ int main(int argc, char *argv[]) {
     int rc = 0;
     int client_address_len = 0;
     char reply[256];
-    char sendbuf[256] = "hello from server";
-    const char* username = "Username: ";
+    char sendbuf[256];
+    unsigned char logged = 0;
 
     // Check the arguments before proceeding
     if (argc < 2 || argc >= 3) {
@@ -63,17 +69,23 @@ int main(int argc, char *argv[]) {
     }
 
     client_address_len = sizeof(client_address);
-    // Let's run forever
     client_socket_fd = accept(socket_fd, (struct sockaddr *) &client_address, &client_address_len);
     if (client_socket_fd < 0) {
         perror("Error on accept");
         close(socket_fd);
         exit(1);
     }
-    fflush(stdout);
-    send(client_socket_fd, username, strlen(username), 0); 
     
     while(1) {
+        if (!logged) { 
+            if (loginPrompt(client_socket_fd) == 0) {
+                write(client_socket_fd, "login failed", 12);
+                fprintf(stderr, "Login failed\n");
+                break;
+            } else {
+                logged = 1;
+            }
+        }
         memset(reply, 0, sizeof(reply));
         rc = read(client_socket_fd, reply, 256);
 
@@ -81,17 +93,57 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-       rc = write(client_socket_fd, sendbuf, strlen(sendbuf));
-       printf("I sent %d\n", rc);
-       if (rc < 0 ) {
-           perror("Write to socket failed");
-       }
-       //close(client_socket_fd);
+        if (strcmp(reply, LOGOUT) == 0) {
+            write(client_socket_fd, "Session Terminated, you can leave", 33);
+            break;
+        }
+
+        snprintf(sendbuf, sizeof(sendbuf),  "%s\n", reply);
+        sendbuf[255] = '\0'; 
+        rc = write(client_socket_fd, sendbuf, strlen(sendbuf));
+        if (rc < 0 ) {
+            perror("Write to socket failed");
+        }
     }
     close(socket_fd);
     close(client_socket_fd);
-    printf("Disconnected");
+    printf("Disconnected\n");
     return 0;
 }
 
+int loginPrompt(int socket_fd) {
+    const char* username = "Username: ";
+    const char* password = "Password: ";
+    const char* welcome = "Welcome, I can echo whatever\n";
+    unsigned char logged = 0;
+    int attempts = 0;
+    char user[100];
+    char pass[100];
+    int rc = 0;
 
+    while (attempts < MAX_ATTEMPTS) {
+        memset(user, 0, sizeof(user));
+        write(socket_fd, username, strlen(username));
+        rc = read(socket_fd, user, 100);
+        if (rc < 0) {
+            break;
+        }
+        memset(pass, 0, sizeof(pass));
+        write(socket_fd, password, strlen(password));
+ 
+        rc = read(socket_fd, pass, 100);
+        if (rc < 0) {
+            break;
+        }
+
+        if (strcmp(user, USER) == 0) {
+            if (strcmp(pass, PASS) == 0 ) {
+                write(socket_fd, welcome, strlen(welcome));
+                logged = 1;
+                break;
+            }
+        }
+        attempts++;
+    }
+    return logged;
+}
