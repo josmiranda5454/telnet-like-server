@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     while(1) {
         if (!logged) { 
             if (loginPrompt(client_socket_fd) == 0) {
-                write(client_socket_fd, "login failed", 12);
+                send(client_socket_fd, "login failed", 12, 0);
                 fprintf(stderr, "Login failed\n");
                 break;
             } else {
@@ -87,20 +87,20 @@ int main(int argc, char *argv[]) {
             }
         }
         memset(reply, 0, sizeof(reply));
-        rc = read(client_socket_fd, reply, 256);
+        rc = recv(client_socket_fd, reply, 256, 0);
 
         if (rc < 0) {
             break;
         }
 
         if (strcmp(reply, LOGOUT) == 0) {
-            write(client_socket_fd, "Session Terminated, you can leave", 33);
+            send(client_socket_fd, "Session Terminated, you can leave", 33, 0);
             break;
         }
 
         snprintf(sendbuf, sizeof(sendbuf),  "%s\n", reply);
         sendbuf[255] = '\0'; 
-        rc = write(client_socket_fd, sendbuf, strlen(sendbuf));
+        rc = send(client_socket_fd, sendbuf, strlen(sendbuf), 0);
         if (rc < 0 ) {
             perror("Write to socket failed");
         }
@@ -123,22 +123,22 @@ int loginPrompt(int socket_fd) {
 
     while (attempts < MAX_ATTEMPTS) {
         memset(user, 0, sizeof(user));
-        write(socket_fd, username, strlen(username));
-        rc = read(socket_fd, user, 100);
+        send(socket_fd, username, strlen(username), 0);
+        rc = recv(socket_fd, user, 100, 0);
         if (rc < 0) {
             break;
         }
         memset(pass, 0, sizeof(pass));
-        write(socket_fd, password, strlen(password));
+        send(socket_fd, password, strlen(password), 0);
  
-        rc = read(socket_fd, pass, 100);
+        rc = recv(socket_fd, pass, 100, 0);
         if (rc < 0) {
             break;
         }
 
         if (strcmp(user, USER) == 0) {
             if (strcmp(pass, PASS) == 0 ) {
-                write(socket_fd, welcome, strlen(welcome));
+                send(socket_fd, welcome, strlen(welcome), 0);
                 logged = 1;
                 break;
             }
