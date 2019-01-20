@@ -51,7 +51,7 @@ int main (int argc, char *argv[]) {
         printf("%s", rep);
 
         scanf("%s", buf);
-        if (write(socket_fd, buf, strlen(buf)) < 0) {
+        if (send(socket_fd, buf, strlen(buf), 0) < 0) {
             perror("Send failed");
             close(socket_fd);
             exit(1);
