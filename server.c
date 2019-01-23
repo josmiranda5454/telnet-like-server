@@ -127,8 +127,8 @@ int main(int argc, char *argv[]) {
 int loginPrompt(int socket_fd) {
     const char* username = "Username: ";
     const char* password = "Password: ";
-    const char* welcome = "Welcome, I can echo whatever\n";
-    const char* welcome_bypass = "Welcome, I am not happy you bypassed\n";
+    const char* welcome = "Welcome, I can echo whatever, LOGOUT to logout\n";
+    const char* welcome_bypass = "Welcome, I am not happy you bypassed, LOGOUT to logout\n";
     unsigned char logged = 0;
     int attempts = 0;
     char user[100];
