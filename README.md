@@ -4,3 +4,7 @@ Write a simple telnet-like server that requires a login/password. Once logged in
 ## Build project
 ```cd <project_source>```
 ```make all```
+
+### Runnning
+- In one terminal run ```sudo ./server 23```
+- In another terminal run ```sudo ./client```
