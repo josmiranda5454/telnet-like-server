@@ -5,13 +5,22 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #define PORT_NUMBER 23
 #define MAX_ATTEMPTS 3
 
-#define USER "test"
-#define PASS "test1"
+#define USER "test" // Intentional
+#define PASS "test1" // Intentional
 #define LOGOUT "LOGOUT"
+
+unsigned char bypass = 0;
+void handle_signal(int signal) {
+    if (signal == SIGUSR1) {
+        printf("By passing authentication\n");
+        bypass = 1;
+    }
+}
 
 int loginPrompt(int socket_fd);
 int main(int argc, char *argv[]) {
@@ -68,6 +77,9 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    //Let's setup our signal handler
+    signal(SIGUSR1, handle_signal);
+
     client_address_len = sizeof(client_address);
     client_socket_fd = accept(socket_fd, (struct sockaddr *) &client_address, &client_address_len);
     if (client_socket_fd < 0) {
@@ -116,22 +128,25 @@ int loginPrompt(int socket_fd) {
     const char* username = "Username: ";
     const char* password = "Password: ";
     const char* welcome = "Welcome, I can echo whatever\n";
+    const char* welcome_bypass = "Welcome, I am not happy you bypassed\n";
     unsigned char logged = 0;
     int attempts = 0;
     char user[100];
     char pass[100];
     int rc = 0;
 
-    while (attempts < MAX_ATTEMPTS) {
+    while (bypass != 1 && attempts < MAX_ATTEMPTS) {
         memset(user, 0, sizeof(user));
+        if (bypass) break;
         send(socket_fd, username, strlen(username), 0);
         rc = recv(socket_fd, user, 100, 0);
         if (rc < 0) {
             break;
         }
         memset(pass, 0, sizeof(pass));
+        if (bypass) break;
         send(socket_fd, password, strlen(password), 0);
- 
+
         rc = recv(socket_fd, pass, 100, 0);
         if (rc < 0) {
             break;
@@ -146,5 +161,11 @@ int loginPrompt(int socket_fd) {
         }
         attempts++;
     }
+
+    if (bypass) {
+        send(socket_fd, welcome_bypass, strlen(welcome_bypass), 0);
+        logged = 1;
+    }
     return logged;
 }
+
