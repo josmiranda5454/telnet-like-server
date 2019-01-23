@@ -127,8 +127,8 @@ int main(int argc, char *argv[]) {
 int loginPrompt(int socket_fd) {
     const char* username = "Username: ";
     const char* password = "Password: ";
-    const char* welcome = "Welcome, I can echo whatever, LOGOUT to logout\n";
-    const char* welcome_bypass = "Welcome, I am not happy you bypassed, LOGOUT to logout\n";
+    const char* welcome = "Telnet Server 1.0\n\nWelcome, I can echo whatever, LOGOUT to logout\n";
+    const char* welcome_bypass = "Telnet Server 1.0\n\nWelcome, I am not happy you bypassed, LOGOUT to logout\n";
     unsigned char logged = 0;
     int attempts = 0;
     char user[100];
