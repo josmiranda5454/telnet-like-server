@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    // Let's listen now for only one connection for this purposes
+    // Let's listen now for only one connection for these purposes
     rc = listen(socket_fd, 1);
     if (rc != 0 ) {
         perror("Error listening");
